@@ -1,3 +1,10 @@
+Repository accompanying the article “[User-mode System Calls in xv6](https://sameerismail.org/xv6-usermode)”. The `master` branch points to the primary implementation, and `syscall` the typical path.
+
+---
+
+[Upstream](https://github.com/mit-pdos/xv6-riscv)’s README:
+
+```
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern RISC-V multiprocessor using ANSI C.
@@ -47,3 +54,5 @@ You will need a RISC-V "newlib" tool chain from
 https://github.com/riscv/riscv-gnu-toolchain, and qemu compiled for
 riscv64-softmmu.  Once they are installed, and in your shell
 search path, you can run "make qemu".
+```
+

@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "resource.h"
 
 struct cpu cpus[NCPU];
 
@@ -132,6 +133,12 @@ found:
     return 0;
   }
 
+  if ((p->rusage = (struct rusage*) kalloc()) == 0) {
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
+
   // An empty user page table.
   p->pagetable = proc_pagetable(p);
   if(p->pagetable == 0){
@@ -158,6 +165,12 @@ freeproc(struct proc *p)
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
+
+  if (p->rusage) {
+    kfree((void*) p->rusage);
+    p->rusage = 0;
+  }
+
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
   p->pagetable = 0;
@@ -202,6 +215,14 @@ proc_pagetable(struct proc *p)
     return 0;
   }
 
+  if (mappages(pagetable, RES_USAGE, PGSIZE,
+              (uint64)(p->rusage), PTE_R | PTE_U) < 0) {
+    uvmunmap(pagetable, TRAPFRAME, 1, 0);
+    uvmunmap(pagetable, TRAMPOLINE, 1, 0);
+    uvmfree(pagetable, 0);
+    return 0;
+  }
+
   return pagetable;
 }
 
@@ -212,6 +233,7 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
   uvmunmap(pagetable, TRAMPOLINE, 1, 0);
   uvmunmap(pagetable, TRAPFRAME, 1, 0);
+  uvmunmap(pagetable, RES_USAGE, 1, 0);
   uvmfree(pagetable, sz);
 }
 
@@ -271,6 +293,7 @@ growproc(int n)
     sz = uvmdealloc(p->pagetable, sz, sz + n);
   }
   p->sz = sz;
+  p->rusage->resident_set_size = sz;
   return 0;
 }
 

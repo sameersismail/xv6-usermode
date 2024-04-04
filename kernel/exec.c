@@ -6,6 +6,7 @@
 #include "proc.h"
 #include "defs.h"
 #include "elf.h"
+#include "resource.h"
 
 static int loadseg(pde_t *, uint64, struct inode *, uint, uint);
 
@@ -124,6 +125,7 @@ exec(char *path, char **argv)
   oldpagetable = p->pagetable;
   p->pagetable = pagetable;
   p->sz = sz;
+  p->rusage->resident_set_size = sz;
   p->trapframe->epc = elf.entry;  // initial program counter = main
   p->trapframe->sp = sp; // initial stack pointer
   proc_freepagetable(oldpagetable, oldsz);
